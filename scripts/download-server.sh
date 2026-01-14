@@ -163,26 +163,26 @@ TOTAL_RAM_GB=$((TOTAL_RAM_KB / 1024 / 1024))
 
 echo "   Detected RAM: ${TOTAL_RAM_GB}GB"
 
-# Calculate optimal JVM memory settings (leave 2GB for system)
+# Calculate optimal JVM memory settings (leave 2-3GB for system)
 if [ $TOTAL_RAM_GB -le 4 ]; then
     # 4GB or less: use 2GB max
     XMS="1G"
     XMX="2G"
     echo "   ⚠️  Low RAM detected - using conservative settings"
 elif [ $TOTAL_RAM_GB -le 8 ]; then
-    # 5-8GB: use 4GB max
+    # 5-8GB: use 5GB max
     XMS="2G"
-    XMX="4G"
+    XMX="5G"
     echo "   Using moderate settings"
 elif [ $TOTAL_RAM_GB -le 16 ]; then
-    # 9-16GB: use 6GB max
-    XMS="3G"
-    XMX="6G"
-    echo "   Using optimized settings"
-else
-    # 16GB+: use 8GB max
+    # 9-16GB: use 8GB max (leave 3GB for system)
     XMS="4G"
     XMX="8G"
+    echo "   Using optimized settings"
+else
+    # 16GB+: use 12GB max
+    XMS="6G"
+    XMX="12G"
     echo "   Using high-performance settings"
 fi
 

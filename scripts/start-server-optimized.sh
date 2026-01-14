@@ -74,8 +74,8 @@ echo ""
 # Optimized JVM arguments
 JVM_ARGS=(
     # Memory (auto-configured by download-server.sh based on system RAM)
-    -Xms3G
-    -Xmx6G
+    -Xms4G
+    -Xmx8G
     
     # Garbage Collector (ZGC for ultra-low latency)
     -XX:+UseZGC
