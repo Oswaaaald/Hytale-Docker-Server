@@ -62,8 +62,26 @@ if [ "$JAVA_CORRECT_VERSION" = false ]; then
     echo ""
     echo "📥 Installing Java 25 (Adoptium Temurin)..."
     
-    JAVA_TARBALL="OpenJDK25U-jdk_x64_linux_hotspot_${JAVA_BUILD/+/_}.tar.gz"
-    JAVA_URL="https://github.com/adoptium/temurin25-binaries/releases/download/jdk-${JAVA_BUILD}/OpenJDK25U-jdk_x64_linux_hotspot_${JAVA_BUILD/+/_}.tar.gz"
+    # Detect architecture
+    ARCH=$(uname -m)
+    case "$ARCH" in
+        x86_64)
+            JAVA_ARCH="x64"
+            ;;
+        aarch64|arm64)
+            JAVA_ARCH="aarch64"
+            ;;
+        *)
+            echo "❌ Unsupported architecture: $ARCH"
+            echo "Please install Java 25 manually from https://adoptium.net"
+            exit 1
+            ;;
+    esac
+    
+    echo "🔍 Detected architecture: $ARCH → Using Java $JAVA_ARCH build"
+    
+    JAVA_TARBALL="OpenJDK25U-jdk_${JAVA_ARCH}_linux_hotspot_${JAVA_BUILD/+/_}.tar.gz"
+    JAVA_URL="https://github.com/adoptium/temurin25-binaries/releases/download/jdk-${JAVA_BUILD}/OpenJDK25U-jdk_${JAVA_ARCH}_linux_hotspot_${JAVA_BUILD/+/_}.tar.gz"
     JAVA_DIR="jdk-${JAVA_BUILD}"
     
     # Download Java 25
@@ -74,8 +92,9 @@ if [ "$JAVA_CORRECT_VERSION" = false ]; then
     echo "📦 Extracting..."
     tar -xzf "$JAVA_TARBALL"
     
-    # Install to /opt
+    # Install to /opt (remove existing if present)
     echo "📂 Installing to /opt/..."
+    sudo rm -rf /opt/"$JAVA_DIR"
     sudo mv "$JAVA_DIR" /opt/
     
     # Configure as default alternative
