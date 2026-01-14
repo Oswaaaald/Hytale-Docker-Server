@@ -1,0 +1,32 @@
+# Git
+.git/
+.gitignore
+
+# Runtime data (will be mounted as volumes)
+universe/
+backups/
+logs/
+mods/
+
+# Config files (will be mounted individually)
+config.json
+permissions.json
+whitelist.json
+bans.json
+
+# Docker files
+docker-compose.yml
+.dockerignore
+
+# Documentation
+README.md
+
+# Scripts (not needed in container)
+scripts/
+
+# Build artifacts
+*.tar.gz
+
+# Auth files
+auth.enc
+machine-id

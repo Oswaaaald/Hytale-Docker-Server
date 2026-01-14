@@ -1,0 +1,49 @@
+services:
+  hytale-server:
+    build: .
+    container_name: hytale-server
+    hostname: hytale-server
+    restart: unless-stopped
+    
+    ports:
+      - "5520:5520/udp"
+    
+    volumes:
+      # Server directory - MUST be volume for auth persistence
+      - hytale-server-data:/server/Server
+      
+      # Persistent data (inside Server/ workdir)
+      - ./universe:/server/Server/universe
+      - ./backups:/server/Server/backups
+      - ./mods:/server/Server/mods
+      - ./logs:/server/Server/logs
+      
+      # Machine ID - Required for Hytale auth.enc encryption (stable UUID)
+      - ./machine-id:/etc/machine-id:ro
+      
+      # Configuration files (mounted to Server/ workdir)
+      - ./config.json:/server/Server/config.json
+      - ./permissions.json:/server/Server/permissions.json
+      - ./whitelist.json:/server/Server/whitelist.json
+      - ./bans.json:/server/Server/bans.json
+    
+    environment:
+      # JVM Memory settings (optimized for 11GB system RAM)
+      - XMS=4G
+      - XMX=8G
+      
+      # Optional: Timezone
+      - TZ=Europe/Paris
+    
+    # Resource limits (optional)
+    deploy:
+      resources:
+        limits:
+          cpus: '4'
+          memory: 8G
+        reservations:
+          cpus: '2'
+          memory: 4G
+
+volumes:
+  hytale-server-data:

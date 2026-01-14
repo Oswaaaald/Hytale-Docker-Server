@@ -1,208 +1,131 @@
-# 🎮 Hytale Server - Complete Guide
+# 🎮 Hytale Server Setup
 
-Installation and management of a dedicated Hytale server on **Linux** in just a few commands.
-
----
-
-## 📋 Prerequisites
-
-- **OS**: Linux (Ubuntu, Debian, CentOS, etc.)
-- **RAM**: 4GB minimum (8GB recommended for production)
-- **Java**: Version 25 (installed automatically by the script)
-- **Port**: UDP 5520 open (⚠️ UDP, not TCP!)
+Two options to run your Hytale server on Linux: **Docker** (recommended) or **Bash scripts**.
 
 ---
 
-## 🚀 Installation in 3 Steps
+## 🐳 Option 1: Docker (Recommended)
 
-### 1️⃣ Download the Server
+**Advantages**: Isolated environment, automatic updates, easy backups, cross-platform.
+
+### Prerequisites
+- **Docker** & **Docker Compose** installed
+- **4GB RAM minimum** (8GB recommended)
+- **UDP port 5520** open
+
+### Quick Setup
+
 ```bash
-cd scripts
-./download-server.sh
+# 1. Install & start server
+./hytale.sh install
+./hytale.sh start
+
+# 2. First connection - authenticate
+./hytale.sh console
+# Type: /auth login device
+# Follow the link: https://accounts.hytale.com/device
 ```
-Automatically installs Java 25 if needed, then downloads the server files (3.5 GB).
 
-### 2️⃣ Install the Service (optional but recommended)
+### Commands
+
+```bash
+./hytale.sh start         # Start server
+./hytale.sh stop          # Stop server gracefully
+./hytale.sh restart       # Restart server
+./hytale.sh console       # Access console (exit: Ctrl+A then D)
+./hytale.sh logs          # View logs
+./hytale.sh status        # Server status
+
+./hytale.sh backup        # Create backup
+./hytale.sh restore       # Restore from backup
+./hytale.sh update        # Update server (with auto-backup)
+
+./hytale.sh reset         # Reset everything (⚠️ destructive)
+```
+
+**Memory/RAM config**: Edit `docker-compose.yml` (XMS/XMX variables), see [Performance Tuning](#%EF%B8%8F-performance-tuning).  
+**Backups**: Automatic rotation (keeps 10 most recent), update backups named `pre_update_*`.
+
+---
+
+## 🔧 Option 2: Bash Scripts
+
+**Advantages**: Direct control, no Docker needed, systemd service support.
+
+### Prerequisites
+- **Java 25** (auto-installed by script)
+- **4GB RAM minimum** (8GB recommended)  
+- **UDP port 5520** open
+
+### Quick Setup
+
 ```bash
 cd scripts
+
+# 1. Download server
+./download-server.sh
+
+# 2. Install systemd service (optional)
 sudo ./install-service.sh
-```
-Configures automatic startup on system boot.
 
-### 3️⃣ Start the Server
-```bash
+# 3. Start server
 sudo systemctl start hytale-server
+# Or without service: ./start-server-optimized.sh
 ```
-Or without service: `cd scripts && ./start-server-optimized.sh`
 
-**First startup**: Authenticate with `/auth login device` in the console and follow the instructions (https://accounts.hytale.com/device).
+### Commands
 
----
-
-## 📜 Available Scripts
-
-All scripts are in the `scripts/` folder.
-
-### `download-server.sh`
-📥 **Downloads/updates the server**
-
+**With systemd service**:
 ```bash
-cd scripts
-./download-server.sh
+sudo systemctl start hytale-server      # Start
+sudo systemctl stop hytale-server       # Stop
+sudo systemctl restart hytale-server    # Restart
+sudo systemctl status hytale-server     # Status
 ```
-- Checks and automatically installs Java 25 (Adoptium Temurin)
-- Uses the official Hytale Downloader CLI
-- Checks if the server is running before updating
-- Downloads Server/ and Assets.zip (3.5 GB)
 
+**Direct scripts** (in `scripts/` folder):
 ```bash
-cd scripts
-./download-server.sh  # Install or update
+./download-server.sh        # Download/update server
+./start-server-optimized.sh # Start server
+./console.sh                # Access console (exit: Ctrl+A then D)
+./backup.sh                 # Create backup
+./restore-backup.sh         # Restore from backup
+./reset.sh                  # Reset everything (⚠️ destructive)
 ```
 
 ---
 
-### `install-service.sh`
-⚙️ **Installs the systemd service**
-- Automatic startup on boot
-- Management with `systemctl start/stop/restart`
-- Console accessible via screen
+## 🔥 Firewall Configuration
 
-```bash
-cd scripts
-sudo ./install-service.sh  # Run only once
-```
-
-**Useful commands after installation:**
-```bash
-sudo systemctl start hytale-server    # Start
-sudo systemctl stop hytale-server     # Stop
-sudo systemctl restart hytale-server  # Restart
-sudo systemctl status hytale-server   # View status
-```
-
----
-
-### `console.sh`
-🖥️ **Access the server console**
-- Connects to the screen session
-- **To exit**: Ctrl+A then D (⚠️ NOT Ctrl+C!)
-- **To stop**: Type `/stop` in the console
-
-```bash
-cd scripts
-./console.sh  # Open the console
-```
-
-**Protection**: Ctrl+C is disabled, only `/stop` stops the server.
-
----
-
-### `backup.sh`
-💾 **Create a backup**
-- Backs up universe/, config, mods, auth
-- Automatic rotation (keeps 10 backups max)
-- Format: `backup-2026-01-13_19-30-00.tar.gz`
-
-```bash
-cd scripts
-./backup.sh  # Create a backup now
-```
-
-**Before any update or major change, make a backup!**
-
----
-
-### `restore-backup.sh`
-♻️ **Restore a backup**
-- Interactive menu listing all backups
-- Automatically stops the server if necessary
-- Offers to restart after restoration
-
-```bash
-cd scripts
-./restore-backup.sh  # Restoration menu
-```
-
----
-
-### `reset.sh`
-🔥 **Complete server reset**
-- Deletes EVERYTHING except scripts and documentation
-- Double confirmation required (type "RESET")
-- Useful to start from scratch
-
-```bash
-cd scripts
-./reset.sh  # ⚠️ Irreversible deletion!
-```
-
-**After reset**: `./download-server.sh` then restart.
-
----
-
-## 🔧 Network Configuration
-
-### Local Firewall
-
-**Ubuntu/Debian (ufw)**:
+### Ubuntu/Debian
 ```bash
 sudo ufw allow 5520/udp
 ```
 
-**RHEL/CentOS/Fedora (firewalld)**:
+### RHEL/CentOS/Fedora
 ```bash
 sudo firewall-cmd --permanent --add-port=5520/udp
 sudo firewall-cmd --reload
 ```
 
-**Other (iptables)**:
+### Router/NAT
+Port forward **UDP 5520** to your server's local IP.
+
+**Verify**:
 ```bash
-sudo iptables -A INPUT -p udp --dport 5520 -j ACCEPT
-sudo iptables-save | sudo tee /etc/iptables/rules.v4
-```
-
-### Port Forwarding (Router)
-
-If the server is behind a router/box:
-
-1. Access the router interface (192.168.1.1 or 192.168.0.1)
-2. Go to "Port Forwarding" / "NAT"
-3. Create a rule:
-   - **External port**: 5520
-   - **Internal port**: 5520
-   - **Protocol**: **UDP** ⚠️ (not TCP!)
-   - **Local IP**: Server IP (ex: 192.168.1.100)
-
-### Verify Connectivity
-
-```bash
-# Check that the server is listening on the port
 sudo ss -tulpn | grep 5520
-
-# Expected output:
-# udp   LISTEN  0.0.0.0:5520
 ```
 
 ---
 
-## 🎮 Mods
-
-1. Download mods (.zip or .jar)
-2. Place in the `mods/` folder
-3. Restart the server
-
-```bash
-sudo systemctl restart hytale-server
-```
-
----
-
-## 📁 Structure des Fichiers
+## 📁 File Structure
 
 ```
 hytale-server/
-├── scripts/             # Tous les scripts de gestion
+├── hytale.sh              # Docker management (Option 1)
+├── docker-compose.yml     # Docker config
+├── Dockerfile
+├── scripts/               # Bash scripts (Option 2)
 │   ├── download-server.sh
 │   ├── install-service.sh
 │   ├── start-server-optimized.sh
@@ -210,262 +133,96 @@ hytale-server/
 │   ├── backup.sh
 │   ├── restore-backup.sh
 │   └── reset.sh
-├── README.md            # This file
-├── Server/              # Server binaries
-├── Assets.zip           # Game assets (3.5 GB)
-├── universe/            # Worlds and players
-├── mods/                # Installed mods
-├── backups/             # Backups
-├── logs/                # Server logs
-├── config.json          # Configuration
-├── auth.enc             # Authentication
-└── hytale-downloader/   # Download CLI
+├── Server/                # Server files
+├── Assets.zip             # Game assets (3.5GB)
+├── universe/              # Worlds
+├── mods/                  # Mods
+├── logs/                  # Logs
+├── backups/               # Backups
+├── config.json            # Server config
+└── auth.enc               # Authentication
 ```
 
 ---
 
-## 🔄 Server Update
+## 🎮 Add Mods
 
+1. Download mods (`.zip` or `.jar`)
+2. Place in `mods/` folder
+3. Restart server
+
+**Docker**: `./hytale.sh restart`  
+**Scripts**: `sudo systemctl restart hytale-server`
+
+---
+
+## 🔄 Update Server
+
+### Docker
 ```bash
-# 1. Create a backup
-./backup.sh
+./hytale.sh update
+# Auto-creates backup → rebuilds image → restarts
+```
 
-# 2. Stop the server
+### Bash Scripts
+```bash
+cd scripts
+./backup.sh                  # Create backup first
 sudo systemctl stop hytale-server
-
-# 3. Download the new version
-./download-server.sh
-
-# 4. Restart
+./download-server.sh         # Download new version
 sudo systemctl start hytale-server
 ```
 
-**Check available updates**:
-```bash
-./hytale-downloader/hytale-downloader-linux-amd64 -print-version
-```
-
 ---
 
-## ❓ Quick Help
-
-| Problem | Solution |
-|----------|----------|
-| Server doesn't start | Check Java 25: `java --version` |
-| Can't connect | Check firewall and port forwarding UDP 5520 |
-| Screen console stuck | Ctrl+A then D to detach, not Ctrl+C! |
-| Permission error | Run commands with `sudo` |
-| Jitter in game | Reduce MaxViewRadius in config.json |
-| Server crashes | Increase RAM in start-server-optimized.sh |
-
----
-
-## 🌟 Recommended Workflow
-
-**Daily usage**:
-- Start/stop: `sudo systemctl start/stop hytale-server`
-- Console: `./console.sh` (exit with Ctrl+A D)
-- Backup before changes: `./backup.sh`
-
-**Maintenance**:
-- Regular backup: `./backup.sh` (weekly recommended)
-- Check updates: `./download-server.sh` displays available version
-- Apply updates: backup → stop → download → start
-
-**In case of problems**:
-- Restore backup: `./restore-backup.sh`
-- Complete reset: `./reset.sh` then `./download-server.sh`
-
----
-
-**Support**: [hytale.com/support](https://hytale.com/support)
-
-## ⚙️ Optimizations
+## ⚙️ Performance Tuning
 
 ### View Distance
+Main RAM consumer. Edit `config.json`:
+```json
+"MaxViewRadius": 8
+```
+- **8 chunks**: ~4GB RAM
+- **12 chunks**: ~8GB RAM
+- **16+ chunks**: 12GB+ RAM
 
-View distance is the main driver of RAM usage.
+### Memory Settings
 
-**Recommendations:**
-- Maximum: 12 chunks (384 blocks)
-- Default Hytale: 384 blocks ≈ 24 chunks Minecraft
-- Default Minecraft: 10 chunks (160 blocks)
+**Docker**: Edit `docker-compose.yml`
+```yaml
+environment:
+  - XMS=4G    # Initial
+  - XMX=8G    # Maximum
+```
 
-⚠️ Expect higher RAM usage than Minecraft with default settings.
-
-### AOT Cache (Ahead-Of-Time)
-
-The pre-trained AOT cache (`HytaleServer.aot`) improves startup times by skipping JIT warmup.
-
-**Usage:**
+**Bash**: Edit `scripts/start-server-optimized.sh`
 ```bash
-java -XX:AOTCache=Server/HytaleServer.aot -jar Server/HytaleServer.jar --assets Assets.zip
+-Xms4G -Xmx8G
 ```
 
-(Automatically enabled with `start-server-optimized.sh`)
+---
 
-### Disable Sentry
+## ❓ Troubleshooting
 
-⚠️ **Important during plugin development!**
+| Problem | Solution |
+|---------|----------|
+| Server won't start | **Docker**: Check logs with `./hytale.sh logs`<br>**Scripts**: Check Java 25 with `java --version` |
+| Can't connect | Verify UDP 5520 open + port forwarding configured |
+| High RAM usage | Reduce `MaxViewRadius` in `config.json` |
+| Auth error | Run `/auth login device` in console |
+| Console stuck | Exit with **Ctrl+A then D** (not Ctrl+C!) |
 
-Sentry collects crash reports. Disable it during development:
-```bash
-java -jar Server/HytaleServer.jar --assets Assets.zip --disable-sentry
-```
+---
 
-### Recommended JVM Arguments
+## 🆘 Support
 
-For 8GB of RAM:
-```bash
-java \
-    -Xms4G -Xmx8G \
-    -XX:+UseG1GC \
-    -XX:MaxGCPauseMillis=50 \
-    -XX:G1HeapRegionSize=16M \
-    -XX:+AlwaysPreTouch \
-    -XX:+ParallelRefProcEnabled \
-    -XX:+DisableExplicitGC \
-    -XX:AOTCache=Server/HytaleServer.aot \
-    -jar Server/HytaleServer.jar \
-    --assets Assets.zip
-```
+- [Hytale Server Manual](https://support.hytale.com/hc/en-us/articles/hytale-server-manual)
+- [Support Portal](https://hytale.com/support)
+- [Java 25 Download](https://adoptium.net/)
 
-## 🔄 Automatic Backups
-
-Enable backups:
-```bash
-java -jar Server/HytaleServer.jar \
-    --assets Assets.zip \
-    --backup \
-    --backup-dir backups \
-    --backup-frequency 30
-```
-
-- Backups every 30 minutes
-- Stored in `backups/`
-
-## 🌐 Multi-Server Architecture
-
-Hytale natively supports routing between servers (no need for BungeeCord).
-
-### Player Transfer (Referral)
-
-**From a plugin:**
-```java
-PlayerRef.referToServer("play.example.com", 5520, payloadBytes);
-```
-
-⚠️ **Security**: The payload goes through the client - use HMAC signature to prevent tampering.
-
-### Redirect on Connection
-
-**From a plugin:**
-```java
-PlayerSetupConnectEvent.referToServer("lobby.example.com", 5520, payloadBytes);
-```
-
-Use cases: Load balancing, regional routing, force lobby connection.
-
-### Fallback After Disconnect
-
-In case of crash, the client automatically reconnects to a fallback server (coming soon).
-
-### Custom Proxy
-
-Build custom proxies with Netty QUIC. Packet definitions available in:
-```
-com.hypixel.hytale.protocol.packets
-```
-
-## 🛠️ Systemd Service (Linux)
-
-To run the server as a system service:
-
-```bash
-chmod +x install-service.sh
-sudo ./install-service.sh
-```
-
-Commands:
-```bash
-sudo systemctl start hytale-server
-sudo systemctl stop hytale-server
-sudo systemctl restart hytale-server
-sudo systemctl status hytale-server
-sudo journalctl -u hytale-server -f  # View logs
-```
-
-## 📝 Useful Commands
-
-### Server Help
-```bash
-java -jar Server/HytaleServer.jar --help
-```
-
-### Check Available Version
-```bash
-./hytale-downloader/hytale-downloader -print-version
-```
-
-### Update the Server
-```bash
-./download-server.sh  # Re-downloads the latest version
-```
-
-### Offline Mode (testing only)
-```bash
-java -jar Server/HytaleServer.jar --assets Assets.zip --auth-mode offline
-```
-
-## 🔐 Security and Limits
-
-### Server Limits
-- **100 servers** per Hytale license
-- For more: purchase additional licenses or Server Provider account
-- See: [Server Provider Authentication Guide](https://support.hytale.com/hc/en-us/articles/server-provider-guide)
-
-### Configuration Files
-
-Files like `config.json`, `permissions.json`, etc. are:
-- Read at startup
-- Written during in-game actions
-- ⚠️ Manual modifications during runtime = possibly overwritten
-
-## 🎯 Upcoming Features
-
-- **Server Discovery**: Catalog integrated in main menu
-- **Party System**: Persistent groups across servers
-- **Integrated Payments**: Payment gateway in the client
-- **SRV Records Support**: Under evaluation
-- **First-Party APIs**: Endpoints for UUID lookup, player profiles, telemetry, etc.
-
-## 📚 Resources
-
-- [Official Documentation](https://support.hytale.com/hc/en-us/articles/hytale-server-manual)
-- [Adoptium Java 25](https://adoptium.net/)
-- [JVM Parameters Guide](https://www.baeldung.com/jvm-parameters)
-- [CurseForge Hytale Mods](https://www.curseforge.com/hytale)
-
-## 🆘 Common Problems
-
-### "Wrong Java Version"
-→ Install Java 25 from Adoptium
-
-### "Server files not found"
-→ Run `./download-server.sh`
-
-### "Port already in use"
-→ Change the port with `--bind 0.0.0.0:OTHER_PORT`
-
-### "Players can't connect"
-→ Check:
-1. UDP port 5520 open in firewall
-2. Port forwarding configured (UDP, not TCP)
-3. Server authenticated with `/auth login device`
-
-### "High memory usage"
-→ Reduce view distance in world configuration
+---
 
 ## 📄 License
 
-This server requires a valid Hytale license. See [Terms of Use](https://www.hytale.com/terms).
+Requires valid Hytale license. See [Terms of Use](https://www.hytale.com/terms).
+
